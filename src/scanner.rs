@@ -90,6 +90,8 @@ impl Scanner {
                         }
                     }
                     return Ok(())
+                } else if self.match_next_lexeme('*') {
+                    return self.block_comment();
                 } else {
                     TokenType::Slash
                 }
