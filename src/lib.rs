@@ -1,4 +1,5 @@
 mod errors;
+mod token_type;
 use errors::*;
 use std::path::Path;
 
