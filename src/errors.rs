@@ -8,6 +8,6 @@ pub enum FileError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TokenError {
-    #[error("Invalid token: {0}")]
-    InvalidToken(char),
+    #[error("[line {0}] Error: Unexpected character \"{0}\"")]
+    InvalidToken(u64, char),
 }

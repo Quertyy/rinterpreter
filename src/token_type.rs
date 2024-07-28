@@ -17,7 +17,7 @@ pub enum TokenType {
     Bang,
     BangEqual,
     Equal,
-    EqualEqualL,
+    EqualEqual,
     Greater,
     GreaterEqual,
     Less,

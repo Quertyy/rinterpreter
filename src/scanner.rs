@@ -1,12 +1,11 @@
 use crate::token::Token;
-
 use super::token_type::TokenType;
 use super::errors::TokenError;
 
 #[derive(Debug, Clone)]
 pub struct Scanner {
     source: Vec<u8>,
-    tokens: Vec<TokenType>,
+    tokens: Vec<Token>,
     start: u64,
     current: u64,
     line: u64,
@@ -23,7 +22,7 @@ impl Scanner {
         }
     }
 
-    pub fn scan_tokens(&mut self) -> Vec<TokenType> {
+    pub fn scan_tokens(&mut self) -> Vec<Token> {
         loop {
             if self.is_at_end() {
                 break;
@@ -31,7 +30,7 @@ impl Scanner {
             self.start = self.current;
             self.scan_token();
         }
-        let eof_token = TokenType::Eof;
+        let eof_token = Token::new(TokenType::Eof, "".to_string(), None, self.line);
         self.tokens.push(eof_token);
         self.tokens.clone()
     }
@@ -53,7 +52,49 @@ impl Scanner {
             '+' => TokenType::Plus,
             ';' => TokenType::Semicolon,
             '*' => TokenType::Star,
-            _ => return Err(TokenError::InvalidToken(c)) 
+            '!' => {
+                if self.match_next_lexeme('=') {
+                    TokenType::BangEqual
+                } else {
+                    TokenType::Bang
+                }
+            },
+            '=' => {
+                if self.match_next_lexeme('=') {
+                    TokenType::EqualEqual
+                } else {
+                    TokenType::Equal
+                }
+            },
+            '<' => {
+                if self.match_next_lexeme('=') {
+                    TokenType::LessEqual
+                } else {
+                    TokenType::Less
+                }
+            },
+            '>' => {
+                if self.match_next_lexeme('=') {
+                    TokenType::GreaterEqual
+                } else {
+                    TokenType::Greater
+                }
+            },
+            '/' => {
+                if self.match_next_lexeme('/') {
+                    loop {
+                        if self.peek() != '\n' && self.is_at_end() {
+                            self.advance();
+                        } else {
+                            break;
+                        }
+                    }
+                    return Ok(())
+                } else {
+                    TokenType::Slash
+                }
+            },
+            _ => return Err(TokenError::InvalidToken(self.line, c)) 
         };
 
         self.add_token(token);
@@ -66,12 +107,32 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token: TokenType) {
-        self.add_token_with_literal(token_type, None);
+        self.add_token_with_literal(token, None);
     }
 
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
-        let text = String::from_utf8(self.source[self.start..self.current]).expect("Invalid UTF-8");
-        let new_token = Token::new(token, text.as_str(), Some(literal), self.line);
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<String>) {
+        let start = self.start as usize;
+        let current = self.current as usize;
+        let text = String::from_utf8(self.source[start..current].to_vec()).expect("Invalid UTF-8");
+        let new_token = Token::new(token_type, text, literal, self.line);
+        self.tokens.push(new_token);
     }
 
+    fn match_next_lexeme(&mut self, expected: char) -> bool {
+        if self.is_at_end() {
+            return false;
+        }
+        if self.source[self.current as usize] as char != expected {
+            return false;
+        }
+        self.current += 1;
+        true
+    }
+
+    fn peek(&self) -> char {
+        if self.is_at_end() {
+            return '\0'
+        }
+        return self.source[self.current as usize] as char
+    }
 }
