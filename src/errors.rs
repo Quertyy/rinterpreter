@@ -6,7 +6,7 @@ pub enum FileError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum TokenError {
-    #[error("[line {0}] Error: Unexpected character \"{0}\".")]
+    #[error("[line {0}] Error: Unexpected character \"{1}\".")]
     InvalidToken(u64, char),
     #[error("[line {0}] Error: Unterminated string.")]
     UnterminatedString(u64),

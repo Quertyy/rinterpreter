@@ -28,7 +28,9 @@ impl Scanner {
                 break;
             }
             self.start = self.current;
-            self.scan_token();
+            if let Err(e) = self.scan_token() {
+                println!("{e}");
+            }
         }
         let eof_token = Token::new(TokenType::Eof, "".to_string(), None, self.line);
         self.tokens.push(eof_token);
@@ -130,7 +132,7 @@ impl Scanner {
 
     fn advance(&mut self) -> u8 {
         self.current += 1;
-        self.source[self.current as usize]
+        self.source[(self.current - 1) as usize]
     }
 
     fn add_token(&mut self, token: TokenType) {
@@ -175,7 +177,7 @@ impl Scanner {
     }
 
     fn is_alpha(&self, c: char) -> bool {
-        ("a..=z".contains(c)) || ("A..=Z".contains(c)) || c == '_'
+        c.is_ascii_alphabetic() || c == '_'
     }
 
     fn string(&mut self) -> Result<(), TokenError> {
@@ -251,5 +253,92 @@ impl Scanner {
             Err(_) => TokenType::Identifier
         };
         self.add_token(token);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn construct_scanner(source: &str) -> Scanner {
+        let b = source.as_bytes().to_vec();
+        Scanner::new(b)
+    }
+
+    fn assert_tokens(token: Token, token_type: TokenType) {
+        assert_eq!(token.token_type, token_type);
+    }
+
+    #[test]
+    fn test_and() {
+        let mut scanner = construct_scanner("and");
+        let tokens = scanner.scan_tokens();
+        assert_eq!(tokens[0].token_type, TokenType::Identifier);
+        assert_eq!(tokens[0].lexeme, "and");
+    }
+
+    #[test]
+    fn test_or() {
+        let mut scanner = construct_scanner("or");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::Or);
+    }
+
+    #[test]
+    fn test_string() {
+        let mut scanner = construct_scanner("\"Hello, world!\"");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::String);
+        assert_eq!(tokens[0].litteral, Some("Hello, world!".to_string()));
+    }
+
+    #[test]
+    fn test_string_with_newline() {
+        let mut scanner = construct_scanner("\"Hello, world!\n\"");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::String);
+        assert_eq!(tokens[0].litteral, Some("Hello, world!\n".to_string()));
+    }
+
+    #[test]
+    fn test_left_paren() {
+        let mut scanner = construct_scanner("(");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::LeftParen);
+    }
+
+    #[test]
+    fn test_right_paren() {
+        let mut scanner = construct_scanner(")");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::RightParen);
+    }
+
+    #[test]
+    fn test_left_brace() {
+        let mut scanner = construct_scanner("{");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::LeftBrace);
+    }
+
+    #[test]
+    fn test_right_brace() {
+        let mut scanner = construct_scanner("}");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::RightBrace);
+    }
+
+    #[test]
+    fn test_comma() {
+        let mut scanner = construct_scanner(",");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::Comma);
+    }
+
+    #[test]
+    fn test_dot() {
+        let mut scanner = construct_scanner(".");
+        let tokens = scanner.scan_tokens();
+        assert_tokens(tokens[0].clone(), TokenType::Dot);
     }
 }
