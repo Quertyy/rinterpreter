@@ -1,3 +1,5 @@
+use crate::token::Token;
+
 use super::token_type::TokenType;
 use super::errors::TokenError;
 
@@ -64,7 +66,12 @@ impl Scanner {
     }
 
     fn add_token(&mut self, token: TokenType) {
+        self.add_token_with_literal(token_type, None);
+    }
 
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: String) {
+        let text = String::from_utf8(self.source[self.start..self.current]).expect("Invalid UTF-8");
+        let new_token = Token::new(token, text.as_str(), Some(literal), self.line);
     }
 
 }
