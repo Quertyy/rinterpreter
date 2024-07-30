@@ -13,3 +13,8 @@ pub enum TokenError {
     #[error("[line {0}] Error: Unterminated block comment.")]
     UnterminatedBlockComment(u64),
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum LoxError {
+
+}
