@@ -1,10 +1,21 @@
 use super::token_type::TokenType;
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub enum Literal {
     Identifier(String),
     Str(String),
     Number(f64),
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Literal::Identifier(s) => write!(f, "{}", s),
+            Literal::Str(s) => write!(f, "\"{}\"", s),
+            Literal::Number(n) => write!(f, "{}", n),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -28,6 +39,6 @@ impl Token {
 
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#?} {} {:?}", self.token_type, self.lexeme, self.litteral)
+        write!(f, "{}", self.lexeme)
     }
 }

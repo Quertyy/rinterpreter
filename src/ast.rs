@@ -2,34 +2,45 @@ use super::token::{Token, Literal};
 use super::errors::LoxError;
 
 #[derive(Debug)]
-enum Expr {
+pub enum Expr {
     Binary(BinaryExpr),
     Grouping(GroupingExpr),
     Literal(LiteralExpr),
     Unary(UnaryExpr),
 }
 
+impl Expr {
+    pub fn accept<T>(&self, visitor: &dyn Visitor<T>) -> Result<T, LoxError> {
+        match self {
+            Expr::Binary(e) => e.accept(visitor),
+            Expr::Grouping(e) => e.accept(visitor),
+            Expr::Literal(e) => e.accept(visitor),
+            Expr::Unary(e) => e.accept(visitor),
+        }
+    }
+}
+
 #[derive(Debug)]
-struct BinaryExpr {
-    left: Box<Expr>,
-    operator: Token,
-    right: Box<Expr>,
+pub struct BinaryExpr {
+    pub left: Box<Expr>,
+    pub operator: Token,
+    pub right: Box<Expr>,
 }
 
 #[derive(Debug)]
 pub struct GroupingExpr {
-    expression: Box<Expr>
+    pub expression: Box<Expr>
 }
 
 #[derive(Debug)]
 pub struct LiteralExpr {
-    value: Literal,
+    pub value: Option<Literal>,
 }
 
 #[derive(Debug)]
 pub struct UnaryExpr {
-    operator: Token,
-    right: Box<Expr>,
+    pub operator: Token,
+    pub right: Box<Expr>,
 }
 
 pub trait Visitor<T> {

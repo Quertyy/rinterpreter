@@ -3,6 +3,7 @@ mod token_type;
 mod scanner;
 mod token;
 mod ast;
+mod ast_printer;
 use errors::*;
 use std::path::Path;
 
