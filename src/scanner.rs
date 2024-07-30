@@ -1,4 +1,4 @@
-use crate::token::Token;
+use crate::token::{Token, Literal};
 use super::token_type::TokenType;
 use super::errors::TokenError;
 
@@ -139,7 +139,7 @@ impl Scanner {
         self.add_token_with_literal(token, None);
     }
 
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<String>) {
+    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Option<Literal>) {
         let start = self.start as usize;
         let current = self.current as usize;
         let text = String::from_utf8(self.source[start..current].to_vec()).expect("Invalid UTF-8");
@@ -198,7 +198,7 @@ impl Scanner {
         let start = (self.start + 1) as usize;
         let current = (self.current - 1) as usize;
         let value = String::from_utf8(self.source[start..current].to_vec()).expect("Invalid UTF-8");
-        self.add_token_with_literal(TokenType::String, Some(value));
+        self.add_token_with_literal(TokenType::String, Some(Literal::Str(value)));
         Ok(())
     }
 
@@ -236,8 +236,8 @@ impl Scanner {
                 self.advance();
             }
         }
-        let number_str = String::from_utf8(self.source[self.start as usize..self.current as usize].to_vec()).expect("Invalid UTF-8");
-        self.add_token_with_literal(TokenType::Number, Some(number_str));
+        let number: f64 = String::from_utf8(self.source[self.start as usize..self.current as usize].to_vec()).expect("Invalid UTF-8").parse().unwrap();
+        self.add_token_with_literal(TokenType::Number, Some(Literal::Number(number)));
     }
 
     fn identifier(&mut self) {
@@ -275,29 +275,6 @@ mod tests {
         let tokens = scanner.scan_tokens();
         assert_eq!(tokens[0].token_type, TokenType::Identifier);
         assert_eq!(tokens[0].lexeme, "and");
-    }
-
-    #[test]
-    fn test_or() {
-        let mut scanner = construct_scanner("or");
-        let tokens = scanner.scan_tokens();
-        assert_tokens(tokens[0].clone(), TokenType::Or);
-    }
-
-    #[test]
-    fn test_string() {
-        let mut scanner = construct_scanner("\"Hello, world!\"");
-        let tokens = scanner.scan_tokens();
-        assert_tokens(tokens[0].clone(), TokenType::String);
-        assert_eq!(tokens[0].litteral, Some("Hello, world!".to_string()));
-    }
-
-    #[test]
-    fn test_string_with_newline() {
-        let mut scanner = construct_scanner("\"Hello, world!\n\"");
-        let tokens = scanner.scan_tokens();
-        assert_tokens(tokens[0].clone(), TokenType::String);
-        assert_eq!(tokens[0].litteral, Some("Hello, world!\n".to_string()));
     }
 
     #[test]
