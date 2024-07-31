@@ -27,9 +27,27 @@ pub struct BinaryExpr {
     pub right: Box<Expr>,
 }
 
+impl BinaryExpr {
+    pub fn new(left: Expr, operator: Token, right: Expr) -> Self {
+        Self {
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct GroupingExpr {
     pub expression: Box<Expr>
+}
+
+impl GroupingExpr {
+    pub fn new(expression: Expr) -> Self {
+        Self {
+            expression: Box::new(expression),
+        } 
+    }
 }
 
 #[derive(Debug)]
@@ -37,10 +55,27 @@ pub struct LiteralExpr {
     pub value: Option<Literal>,
 }
 
+impl LiteralExpr {
+    pub fn new(value: Option<Literal>) -> Self {
+        Self {
+            value,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct UnaryExpr {
     pub operator: Token,
     pub right: Box<Expr>,
+}
+
+impl UnaryExpr {
+    pub fn new(operator: Token, right: Expr) -> Self {
+        Self {
+            operator,
+            right: Box::new(right),
+        }
+    } 
 }
 
 pub trait Visitor<T> {

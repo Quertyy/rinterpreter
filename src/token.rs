@@ -6,6 +6,8 @@ pub enum Literal {
     Identifier(String),
     Str(String),
     Number(f64),
+    True,
+    False,
 }
 
 impl fmt::Display for Literal {
@@ -14,6 +16,8 @@ impl fmt::Display for Literal {
             Literal::Identifier(s) => write!(f, "{}", s),
             Literal::Str(s) => write!(f, "\"{}\"", s),
             Literal::Number(n) => write!(f, "{}", n),
+            Literal::True => write!(f, "True"),
+            Literal::False => write!(f, "False"),
         }
     }
 }
