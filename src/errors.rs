@@ -1,3 +1,5 @@
+use crate::token_type::TokenType;
+
 #[derive(Debug, thiserror::Error)]
 pub enum FileError {
     #[error("Failed to read file: {0}")]
@@ -17,4 +19,10 @@ pub enum TokenError {
 #[derive(Debug, thiserror::Error)]
 pub enum LoxError {
 
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ParserError {
+    #[error("Expect '{0:#?}' after expression")]
+    ExpectedToken(TokenType),
 }
