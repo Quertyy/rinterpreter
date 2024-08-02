@@ -164,6 +164,28 @@ impl Parser {
 
         Ok(None)
     }
+
+    fn synchronize(&mut self) {
+        self.advance();
+
+        loop {
+            if self.is_at_end() {
+                break;
+            }
+
+            if self.previous().token_type == TokenType::Semicolon {
+                return;
+            }
+
+            match self.peek().token_type {
+                TokenType::Class | TokenType::Fun | TokenType::Var | TokenType::For |
+                    TokenType::If | TokenType::While | TokenType::Print | 
+                    TokenType::Return => return,
+                _ => {}
+            }
+            self.advance();
+        }
+    }
 }
 
 
