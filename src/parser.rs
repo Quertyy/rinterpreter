@@ -2,7 +2,7 @@ use std::fmt::Binary;
 
 use crate::token::Literal;
 use crate::token_type::TokenType;
-use crate::{BinaryExpr, GroupingExpr, LiteralExpr, UnaryExpr};
+use crate::{BinaryExpr, GroupingExpr, LiteralExpr, ParserError, UnaryExpr};
 
 use super::token::Token;
 use super::ast::Expr;
@@ -21,24 +21,24 @@ impl Parser {
         }
     }
 
-    fn expression(&mut self) -> Expr {
+    fn expression(&mut self) -> Result<Expr, ParserError> {
         self.equality()
     }
 
-    fn equality(&mut self) -> Expr {
-        let mut expr = self.comparison();
+    fn equality(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.comparison()?;
 
         loop {
             if !self.match_types(vec![TokenType::BangEqual, TokenType::EqualEqual]) {
                 break;
             }
 
-            let operator = self.previous();
-            let right = self.comparison();
+            let operator = self.previous().clone();
+            let right = self.comparison()?;
             let binary_expr = BinaryExpr::new(expr, operator.clone(), right);
             expr = Expr::Binary(binary_expr);
         }
-        expr
+        Ok(expr)
     }
 
     fn match_types(&mut self, types: Vec<TokenType>) -> bool {
@@ -49,6 +49,14 @@ impl Parser {
             }
         }
         false
+    }
+
+    fn consume(&mut self, token_type: TokenType) -> Result<(), ParserError> {
+        if self.check(token_type.clone()) {
+            self.advance();
+            return Ok(())
+        }
+        Err(ParserError::ExpectedToken(token_type))
     }
 
     fn check(&self, token_type: TokenType) -> bool {
@@ -77,85 +85,84 @@ impl Parser {
         self.tokens.get((self.current - 1) as usize).unwrap()
     }
 
-    fn comparison(&mut self) -> Expr {
-        let mut expr = self.term();
+    fn comparison(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.term()?;
 
         loop {
             if !self.match_types(vec![TokenType::Greater, TokenType::GreaterEqual, TokenType::Less, TokenType::LessEqual]) {
                 break;
             }
-            let operator = self.previous();
-            let right = self.term();
+            let operator = self.previous().clone();
+            let right = self.term()?;
             let binary_expr = BinaryExpr::new(expr, operator.clone(), right);
             expr = Expr::Binary(binary_expr);
         }
-        expr
+        Ok(expr)
     }
 
-    fn term(&mut self) -> Expr {
-        let mut expr = self.factor();
+    fn term(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.factor()?;
 
         loop {
             if !self.match_types(vec![TokenType::Minus, TokenType::Plus]) {
                 break;
             }
-            let operator = self.previous();
-            let right = self.factor();
+            let operator = self.previous().clone();
+            let right = self.factor()?;
             let binary_expr = BinaryExpr::new(expr, operator.clone(), right);
             expr = Expr::Binary(binary_expr)
         }
-        expr
+        Ok(expr)
     }
 
-    fn factor(&mut self) -> Expr {
-        let mut expr = self.unary();
+    fn factor(&mut self) -> Result<Expr, ParserError> {
+        let mut expr = self.unary()?;
 
         loop {
-            if !self.match_types(vec![TokenType::Slash, TokenType::Start]) {
+            if !self.match_types(vec![TokenType::Slash, TokenType::Star]) {
                 break;
             }
-            let operator = self.previous();
-            let right = self.unary();
-            let binary_expr = BinaryExpr::new(expr, operator.clone, right);
+            let operator = self.previous().clone();
+            let right = self.unary()?;
+            let binary_expr = BinaryExpr::new(expr, operator.clone(), right);
             expr = Expr::Binary(binary_expr)
         }
-        expr
+        Ok(expr)
     }
 
-    fn unary(&mut self) -> Expr {
+    fn unary(&mut self) -> Result<Expr, ParserError> {
         if self.match_types(vec![TokenType::Bang, TokenType::Minus]) {
-            let operator = self.previous();
-            let right = self.unary();
+            let operator = self.previous().clone();
+            let right = self.unary()?;
             let unary_expr = UnaryExpr::new(operator.clone(), right);
-            return Expr::Unary(unary_expr);
+            return Ok(Expr::Unary(unary_expr));
         }
-        self.primary().unwrap()
+        Ok(self.primary()?.unwrap())
     }
 
-    fn primary(&mut self) -> Option<Expr> {
+    fn primary(&mut self) -> Result<Option<Expr>, ParserError> {
         if self.match_types(vec![TokenType::False]) {
-            return Some(Expr::Literal(LiteralExpr::new(Some(Literal::False))));
+            return Ok(Some(Expr::Literal(LiteralExpr::new(Some(Literal::False)))));
         }
         if self.match_types(vec![TokenType::True]) {
-            return Some(Expr::Literal(LiteralExpr::new(Some(Literal::True))));
+            return Ok(Some(Expr::Literal(LiteralExpr::new(Some(Literal::True)))));
         }
         if self.match_types(vec![TokenType::Nil]) {
-            return Some(Expr::Literal(LiteralExpr::new(None)));
+            return Ok(Some(Expr::Literal(LiteralExpr::new(None))));
         }
 
         if self.match_types(vec![TokenType::Number, TokenType::String]) {
-            return Some(Expr::Literal(LiteralExpr::new(self.previous().litteral)));
+            return Ok(Some(Expr::Literal(LiteralExpr::new(self.previous().litteral.clone()))));
         }
 
         if self.match_types(vec![TokenType::LeftParen]) {
-            let expr = self.expression();
-            let text = "Expect ')' after expression".to_string();
-            self.consume(TokenType::RightParen, text); 
+            let expr = self.expression()?;
+            self.consume(TokenType::RightParen)?; 
             let grouping_expr = GroupingExpr::new(expr);
-            return Some(Expr::Grouping(grouping_expr));
+            return Ok(Some(Expr::Grouping(grouping_expr)));
         }
 
-        None
+        Ok(None)
     }
 }
 
