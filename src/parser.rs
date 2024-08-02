@@ -56,7 +56,12 @@ impl Parser {
             self.advance();
             return Ok(())
         }
-        Err(ParserError::ExpectedToken(token_type))
+        let token = self.peek().clone();
+        if token_type == TokenType::Eof {
+            Err(ParserError::Eof(token.line))
+        } else {
+            Err(ParserError::At(token.line, token.lexeme))
+        }
     }
 
     fn check(&self, token_type: TokenType) -> bool {

@@ -1,4 +1,5 @@
 use crate::token_type::TokenType;
+use crate::token::Token;
 
 #[derive(Debug, thiserror::Error)]
 pub enum FileError {
@@ -25,4 +26,8 @@ pub enum LoxError {
 pub enum ParserError {
     #[error("Expect '{0:#?}' after expression")]
     ExpectedToken(TokenType),
+    #[error("[line {0}] Error at '{1}': Expect ')' after expression.")]
+    At(u64, String),
+    #[error("[line {0}] Error at end: Expect ')' after expression.")]
+    Eof(u64)
 }
