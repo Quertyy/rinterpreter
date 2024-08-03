@@ -1,6 +1,6 @@
 # rinterpreter (WIP)
 
-This project is a Rust implementation of the Lox programming language interpreter, based on the book ["Crafting Interpreters"](https://craftinginterpreters.com/contents.html) by Robert Nystrom.
+This project is a Rust implementation of the Lox programming language interpreter, based on the book [Crafting Interpreters](https://craftinginterpreters.com/contents.html) by Robert Nystrom.
 
 ## About Lox
 
